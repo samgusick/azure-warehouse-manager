@@ -1,0 +1,174 @@
+<svg
+  viewBox="0 0 18 18"
+  xmlns="http://www.w3.org/2000/svg"
+  style="
+    text-size-adjust: 100%;
+    font-family: az_ea_font,'Segoe UI',az_font,system-ui,-apple-system,BlinkMacSystemFont,Roboto,Oxygen,Ubuntu,Cantarell,'Open Sans','Helvetica Neue',sans-serif;
+    fill: var(--colorIconPrimary);
+    font-size: 100%;
+    font-weight: inherit;
+    overflow: hidden;
+    --todoBackgroundSecondary: #e1dfdd;
+    --TileOverlay: rgba(255,255,255,.4);
+    --pillFocusBackground: #b3d7f2;
+    --azHomeBackgroundColor: #fafafa;
+    --todoGraphNodeFill: #bbe1ff;
+    --todoGraphNodeFillHover: #6ec0ff;
+    --todoGraphNodeBackground: #bbe1ff;
+    --todoGraphNodeBackgroundHover: #6ec0ff;
+    --todoChartLine: #ccc;
+    --todoChartTextFill: #5b5a59;
+    --todoFocusRowHover: #e6f2fb;
+    --todoBackgroundLight: #e6e6e6;
+    --todoBackgroundMuted: #b3b3b3;
+    --todoBackgroundMuted-80-10: #333;
+    --todoBackgroundMuted-82-10: #2d2d2d;
+    --todoBackgroundMutedHover: #808080;
+    --todoBackgroundInverted: #4d4d4d;
+    --todoBorderMuted: #ccc;
+    --todoBorderMuted-80-20: #333;
+    --todoBorderInverted: #4d4d4d;
+    --todoIconMuted: #808080;
+    --todoIconHeavy: #666;
+    --todoScrollbarThumb: #b3b3b3;
+    --todoExternalBorder: #d6d6d6;
+    --todoExternalBodrerHover: #00bcf2;
+    --todoExternalBorderSelected: #00bcf2;
+    --todoExternalTextMuted: #444;
+    --shadowLevel1: 0 1.6px 3.6px 0 rgba(0,0,0,.132),0 .3px .9px 0 rgba(0,0,0,.108);
+    --shadowLevel2: 0 3.2px 7.2px 0 rgba(0,0,0,.132),0 .6px 1.8px 0 rgba(0,0,0,.108);
+    --shadowLevel3: 0 6.4px 14.4px 0 rgba(0,0,0,.132),0 1.2px 3.6px 0 rgba(0,0,0,.108);
+    --shadowLevel4: 0 25.6px 57.6px 0 rgba(0,0,0,.22),0 4.8px 14.4px 0 rgba(0,0,0,.18);
+    --shadowFocusBorder: inset 0 0 0 1px #0078d4!important;
+    --colorTextPrimary: #292827;
+    --colorTextPrimaryHover: #201f1e;
+    --colorTextSecondary: #646464;
+    --colorTextInverted: #fff;
+    --colorTextBrand: #0078d4;
+    --colorTextError: #a4262c;
+    --colorTextDisabled: #a19f9d;
+    --colorTextSuccess: #428000;
+    --colorLink: #0078d4;
+    --colorLinkHover: #004578;
+    --colorLinkDisabled: #a19f9d;
+    --colorLinkContrast: #005a9e;
+    --colorLinkContrastHover: #004578;
+    --colorLinkContrastDisabled: #a19f9d;
+    --colorButtonBackgroundPrimary: #0078d4;
+    --colorButtonBackgroundPrimaryHover: #106ebe;
+    --colorButtonBackgroundPrimaryPressed: #005a9e;
+    --colorButtonForegroundPrimary: #fff;
+    --colorButtonBackgroundSecondary: #fff;
+    --colorButtonBackgroundSecondaryHover: #f3f2f1;
+    --colorButtonBackgroundSecondaryPressed: #edebe9;
+    --colorButtonBackgroundSecondarySelectHover: #e1dfdd;
+    --colorButtonForegroundSecondary: #323130;
+    --colorButtonForegroundSecondaryHover: #201f1e;
+    --colorButtonForegroundSecondaryPressed: #201f1e;
+    --colorButtonBackgroundDanger: #c32727;
+    --colorButtonBackgroundTertiary: #e6f2fb;
+    --colorButtonBackgroundDangerHover: #a52121;
+    --colorButtonBackgroundDangerPressed: #791818;
+    --colorButtonForegroundDanger: #fff;
+    --colorButtonBackgroundDisabled: #f3f2f1;
+    --colorButtonForegroundDisabled: #a19f9d;
+    --colorButtonToolbardForeground: #323130;
+    --colorButtonToolbardForegroundHover: #201f1e;
+    --colorControlBackground: #fff;
+    --colorControlBackgroundHover: #f3f2f1;
+    --colorControlBackgroundSelected: #edebe9;
+    --colorControlBackgroundSelectedHover: #e1dfdd;
+    --colorControlBackgroundSecondary: #8a8886;
+    --colorControlBackgroundSecondarySelected: #605e5c;
+    --colorControlBackgroundSecondaryHover: #c7e0f4;
+    --colorControlBackgroundSecondarySelectedHover: #0078d4;
+    --colorControlBorder: #8a8886;
+    --colorControlBorderSecondary: #d6d6d6;
+    --colorControlBorderHover: #323130;
+    --colorControlBorderFocus: #0078d4;
+    --colorControlBorderFocusSecondary: #605e5c;
+    --colorControlBorderInfo: #015cda;
+    --colorControlBorderSuccess: #57a300;
+    --colorControlBorderWarning: #db7500;
+    --colorControlBorderError: #a4262c;
+    --colorControlBorderDirty: #8a2da5;
+    --colorControlBorderDisabled: #a19f9d;
+    --colorControlBackgroundDisabled: #f3f2f1;
+    --colorControlBackgroundDisabledSelected: #c8c6c4;
+    --colorControlBackgroundSecondaryDisabled: #edebe9;
+    --colorControlBackgroundSecondaryDisabledSelected: #a19f9d;
+    --colorControlBackgroundBrand: #0078d4;
+    --colorIconPrimary: #323130;
+    --colorIconSecondary: #605e5c;
+    --colorIconBrand: #0078d4;
+    --colorIconBrandHover: #106ebe;
+    --colorIconBrandPressed: #005a93;
+    --colorIconInverted: #fff;
+    --colorIconDisabled: #a19f9d;
+    --colorIconInfo: #015cda;
+    --colorIconSuccess: #57a300;
+    --colorIconWarning: #db7500;
+    --colorIconError: #a4262c;
+    --colorIconUpsell: #8a2da5;
+    --colorContainerBackgroundPrimary: #fff;
+    --colorContainerBackgroundSecondary: #f3f2f1;
+    --colorContainerBackgroundInverted: #000;
+    --colorContainerBackgroudFloating: #fff;
+    --colorContainerBackgroundInfo: #dae4ff;
+    --colorContainerBackgroundSuccess: #e6ffcc;
+    --colorContainerBackgroundWarning: #ffdfb8;
+    --colorContainerBackgroundError: #fdd8db;
+    --colorContainerBackgroundUpsell: #efdbf5;
+    --colorContainerBorderPrimary: #e1dfdd;
+    --colorContainerBorderSecondary: #f3f2f1;
+    --colorDividerPrimary: #f3f2f1;
+    --colorSideNavDocked: #f3f2f1;
+    --colorStatusHighlightInfo: #0058ad;
+    --colorStatusHighlightSuccess: #567f00;
+    --colorStatusHighlightWarning: #ffba01;
+    --colorStatusHighlightChange: #8a2da5;
+    --colorSearchHighlightText: #000;
+    --colorSearchHighlightBackground: #ff0;
+    --copilotIconBackground: #fff;
+    --copilotIconTextColor: #2a446f;
+    --copilotIconHoverBackground: #e6f4fe;
+    --copilotIconHoverTextColor: #263f69;
+    --copilotIconActiveBackground: #cae6fc;
+    --copilotIconActiveTextColor: #243b60;
+    --copilotIconFocusBackground: #fff;
+    --copilotIconFocusTextColor: #2a446f;
+    --topbarBackground: #0078d4;
+    --topbarActionHoverBgColor: #106ebe;
+    --topbarActionPressedBgColor: #1664a7;
+    --topbarButtonActiveBackground: #fff;
+    --topbarText: #fff;
+    --topbarHamburger: #fff;
+    --topbarAlternateTextFill: #135995;
+    --topbarOutlineColor: #fff;
+    --topbarActiveOutlineColor: #605e5c;
+    --searchBackground: #b3d6f2;
+    --searchBackgroundFocus: #fff;
+    --notificationUnreadBackground: #fff;
+    --notificationUnreadText: #0078d4;
+    --topbarBG: #0078d4;
+    --sidebarBackground: #fff;
+    --sidebarText: #000;
+    --sidebarActiveBackground: rgba(85,179,255,.2);
+    --sidebarHoverBackground: #55b3ff1a;
+    --sidebarItemDivider: #edebe9;
+    --sidebarCollapseButton: #333;
+    --sidebarShadowWidth: 8px;
+    --sidebarShadow: linear-gradient(270deg,rgba(0,0,0,.06) 0,rgba(0,0,0,0) 100%);
+    --sidebarLink: #0078d4;
+  "
+>
+  <g>
+    <title>Icon-databases-125</title>
+    <path d="M7.37.5.68 4.38v.96h1.23v7.28h1.21V5.34h8.5v7.89h1.21V5.34h1.23v-.96L7.37.5z" fill="var(--colorIconPrimary)"/>
+    <path d="M4.33 12.62h2.43V10.2H4.33Zm3.64 0h2.43V10.2H8ZM4.33 9h2.43V6.55H4.33ZM8 6.55V9h2.4V6.55Z" fill="#50e6ff"/>
+    <path d="M13.14 10.41c-2.31 0-4.14-.6-4.14-1.33v7.09c0 .73 1.84 1.32 4.12 1.33h.06c2.31 0 4.18-.6 4.18-1.33V9.08c-.04.73-1.91 1.33-4.22 1.33Z" fill="var(--todoGraphNodeFill)"/>
+    <path d="M17.32 9.08c0 .73-1.87 1.33-4.18 1.33S9 9.81 9 9.08s1.87-1.33 4.18-1.33 4.18.59 4.18 1.33" fill="#e8e8e8"/>
+    <path d="M16.35 9c0 .47-1.44.85-3.21.85s-3.2-.41-3.2-.85 1.43-.85 3.2-.85 3.21.38 3.21.85" fill="#50e6ff"/>
+    <path d="M13.14 9.17a8.59 8.59 0 0 0-2.54.32 8.5 8.5 0 0 0 2.54.33 8.5 8.5 0 0 0 2.54-.33 8.59 8.59 0 0 0-2.54-.32Z" fill="#32bedd"/>
+  </g>
+</svg>
