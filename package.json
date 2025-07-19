@@ -1,7 +1,7 @@
 {
   "name": "azure-warehouse-manager",
   "displayName": "Azure Warehouse Manager",
-  "icon": "media/icon.png",
+  "icon": "media/DatawarehouseLogo.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/samgusick/azure-warehouse-manager"
