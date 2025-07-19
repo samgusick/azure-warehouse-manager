@@ -1,12 +1,14 @@
 {
   "name": "azure-warehouse-manager",
-  "displayName": "azure-warehouse-manager",
+  "displayName": "Azure Warehouse Manager",
+  "icon": "media/icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/samgusick/azure-warehouse-manager"
   },
+  "publisher": "GooseDev",
   "description": "Easily manage Azure Data Warehouses with a simple to use interface within the VS Code Editor",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "engines": {
     "vscode": "^1.102.0"
   },
