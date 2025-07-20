@@ -5,6 +5,56 @@ import { SqlManagementClient } from "@azure/arm-sql";
 import { SubscriptionClient } from "@azure/arm-subscriptions";
 
 export async function activate(context: vscode.ExtensionContext) {
+  // Register Scale command
+  context.subscriptions.push(
+    vscode.commands.registerCommand("extension.scaleWarehouse", async (item: WarehouseItem) => {
+      if (!(item instanceof WarehouseItem)) {
+        return;
+      }
+      const sqlClientObj = sqlClients.find(s => s.subscriptionId === item.subscriptionId);
+      if (!sqlClientObj) {
+        vscode.window.showErrorMessage("Could not find SQL client for this subscription.");
+        return;
+      }
+      const sqlClient = sqlClientObj.sqlClient;
+      try {
+        // List available service objectives (performance levels)
+        const objectives = [];
+        for await (const o of sqlClient.serviceObjectives.listByServer(item.resourceGroup, item.server)) {
+          objectives.push(o);
+        }
+        const options = objectives
+          .filter((o: any) => o.name && o.displayName)
+          .map((o: any) => ({
+            label: o.displayName || o.name,
+            value: o.name
+          }));
+        if (options.length === 0) {
+          vscode.window.showErrorMessage("No performance levels found for this warehouse.");
+          return;
+        }
+        const picked = await vscode.window.showQuickPick(options, {
+          placeHolder: "Select a new performance level (service objective)"
+        });
+        if (!picked) {
+          return;
+        }
+        // Get current db info
+        const db = await sqlClient.databases.get(item.resourceGroup, item.server, item.name);
+        // Update database with new service objective
+        await sqlClient.databases.beginUpdateAndWait(item.resourceGroup, item.server, item.name, {
+          sku: {
+            name: picked.value,
+            tier: db.sku?.tier || "DataWarehouse"
+          }
+        });
+        vscode.window.showInformationMessage(`Scaled ${item.name} to ${picked.label}`);
+        provider.refresh();
+      } catch (err: any) {
+        vscode.window.showErrorMessage(`Failed to scale ${item.name}: ${err.message}`);
+      }
+    })
+  );
   // Load all subscriptions with error handling for missing credentials
   let subs = [];
   try {

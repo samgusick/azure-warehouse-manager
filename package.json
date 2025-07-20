@@ -44,6 +44,11 @@
           "command": "extension.resumeWarehouse",
           "when": "view == warehouseView && viewItem == warehouse-paused",
           "group": "inline"
+        },
+        {
+          "command": "extension.scaleWarehouse",
+          "when": "view == warehouseView && (viewItem == warehouse-resumed || viewItem == warehouse-paused)",
+          "group": "inline@2"
         }
       ]
     },
@@ -75,6 +80,10 @@
         "command": "extension.resumeWarehouse",
         "title": "Resume",
         "icon": "$(debug-start)"
+      },
+      {
+        "command": "extension.scaleWarehouse",
+        "title": "Scale Warehouse"
       }
     ]
   },
