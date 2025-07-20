@@ -19,14 +19,49 @@
   "main": "./dist/extension.js",
   "contributes": {
     "views": {
-      "explorer": [
+      "warehouseManager": [
         {
           "id": "warehouseView",
           "name": "Azure Warehouses"
         }
       ]
     },
+    "menus": {
+      "view/title": [
+        {
+          "command": "extension.refreshWarehouses",
+          "when": "view == warehouseView",
+          "group": "navigation@1"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "extension.pauseWarehouse",
+          "when": "view == warehouseView && viewItem == warehouse-resumed",
+          "group": "inline"
+        },
+        {
+          "command": "extension.resumeWarehouse",
+          "when": "view == warehouseView && viewItem == warehouse-paused",
+          "group": "inline"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "warehouseManager",
+          "title": "Warehouse Manager",
+          "icon": "media/DataWarehouseLogo.svg"
+        }
+      ]
+    },
     "commands": [
+      {
+        "command": "extension.refreshWarehouses",
+        "title": "Refresh Warehouses",
+        "icon": "$(refresh)"
+      },
       {
         "command": "extension.manageWarehouse",
         "title": "Manage Warehouse"
@@ -41,21 +76,7 @@
         "title": "Resume",
         "icon": "$(debug-start)"
       }
-    ],
-    "menus": {
-      "view/item/context": [
-        {
-          "command": "extension.pauseWarehouse",
-          "when": "view == warehouseView && viewItem == warehouse-resumed",
-          "group": "inline"
-        },
-        {
-          "command": "extension.resumeWarehouse",
-          "when": "view == warehouseView && viewItem == warehouse-paused",
-          "group": "inline"
-        }
-      ]
-    }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run package",

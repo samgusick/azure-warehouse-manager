@@ -30,6 +30,52 @@ export async function activate(context: vscode.ExtensionContext) {
   const provider = new WarehouseProvider(sqlClients, iconPath);
   vscode.window.registerTreeDataProvider("warehouseView", provider);
 
+  // Periodically check warehouse statuses and refresh UI only if changed
+  let lastWarehouseStates: Record<string, string> = {};
+  async function checkWarehouseStatesAndRefreshIfChanged() {
+    // Gather current warehouse states
+    const currentStates: Record<string, string> = {};
+    for (const clientObj of sqlClients) {
+      const sqlClient = clientObj.sqlClient;
+      const servers = await sqlClient.servers.list();
+      for await (const server of servers) {
+        // Extract resource group from server.id
+        const resourceGroupMatch = server.id?.match(/resourceGroups\/([^/]+)/i);
+        const resourceGroup = resourceGroupMatch ? resourceGroupMatch[1] : undefined;
+        if (!resourceGroup) {
+          continue;
+        }
+        const dbs = await sqlClient.databases.listByServer(resourceGroup, server.name!);
+        for await (const db of dbs) {
+          if (db.sku?.tier === "DataWarehouse" && db.name) {
+            const key = `${clientObj.subscriptionId}|${server.name}|${resourceGroup}|${db.name}`;
+            currentStates[key] = db.status || "";
+          }
+        }
+      }
+    }
+    // Compare with last states
+    const changed = Object.keys(currentStates).length !== Object.keys(lastWarehouseStates).length ||
+      Object.keys(currentStates).some(key => currentStates[key] !== lastWarehouseStates[key]);
+    if (changed) {
+      provider.refresh();
+    }
+    lastWarehouseStates = currentStates;
+  }
+
+  // Set up interval for status checking (every 60 seconds)
+  const interval = setInterval(() => {
+    checkWarehouseStatesAndRefreshIfChanged();
+  }, 60000);
+  context.subscriptions.push({ dispose: () => clearInterval(interval) });
+
+  // Register Refresh command for the view title button
+  context.subscriptions.push(
+    vscode.commands.registerCommand("extension.refreshWarehouses", () => {
+      provider.refresh();
+    })
+  );
+
   // Register Pause command
   context.subscriptions.push(
     vscode.commands.registerCommand("extension.pauseWarehouse", async (item: WarehouseItem) => {
