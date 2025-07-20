@@ -5,16 +5,44 @@ import { SqlManagementClient } from "@azure/arm-sql";
 import { SubscriptionClient } from "@azure/arm-subscriptions";
 
 export async function activate(context: vscode.ExtensionContext) {
-  // Load all subscriptions
-  const subClient = new SubscriptionClient(credential);
-  const subs = [];
-  for await (const sub of subClient.subscriptions.list()) {
-    if (sub.subscriptionId && sub.displayName) {
-      subs.push({ subscriptionId: sub.subscriptionId, displayName: sub.displayName });
+  // Load all subscriptions with error handling for missing credentials
+  let subs = [];
+  try {
+    const subClient = new SubscriptionClient(credential);
+    for await (const sub of subClient.subscriptions.list()) {
+      if (sub.subscriptionId && sub.displayName) {
+        subs.push({ subscriptionId: sub.subscriptionId, displayName: sub.displayName });
+      }
     }
-  }
-  if (subs.length === 0) {
-    vscode.window.showErrorMessage("No Azure subscriptions found. Extension will not activate.");
+    if (subs.length === 0) {
+      throw new Error("No Azure subscriptions found.");
+    }
+  } catch (err: any) {
+    // Check if Azure CLI is installed
+    const exec = require('child_process').exec;
+    exec('az --version', async (error: any) => {
+      if (error) {
+        // Azure CLI not installed
+        const installBtn = "Install Azure CLI";
+        const selection = await vscode.window.showErrorMessage(
+          "Could not authenticate to Azure. Azure CLI is not installed. Click below to install it.",
+          installBtn
+        );
+        if (selection === installBtn) {
+          vscode.env.openExternal(vscode.Uri.parse("https://docs.microsoft.com/cli/azure/install-azure-cli"));
+        }
+      } else {
+        // Azure CLI is installed but not logged in
+        const loginBtn = "Login to Azure";
+        const selection = await vscode.window.showErrorMessage(
+          "Could not authenticate to Azure. Azure CLI is installed, but you are not logged in. Run 'az login' in your terminal.",
+          loginBtn
+        );
+        if (selection === loginBtn) {
+          vscode.window.showInformationMessage("Open a terminal and run 'az login' to authenticate.");
+        }
+      }
+    });
     return;
   }
 
