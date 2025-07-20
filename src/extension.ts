@@ -18,30 +18,26 @@ export async function activate(context: vscode.ExtensionContext) {
       }
       const sqlClient = sqlClientObj.sqlClient;
       try {
-        // List available service objectives (performance levels)
-        const objectives = [];
-        for await (const o of sqlClient.serviceObjectives.listByServer(item.resourceGroup, item.server)) {
-          objectives.push(o);
-        }
-        const options = objectives
-          .filter((o: any) => o.name && o.displayName)
-          .map((o: any) => ({
-            label: o.displayName || o.name,
-            value: o.name
-          }));
-        if (options.length === 0) {
-          vscode.window.showErrorMessage("No performance levels found for this warehouse.");
-          return;
-        }
+        // Get current db info
+        const db = await sqlClient.databases.get(item.resourceGroup, item.server, item.name);
+        // Use a set of common DWU performance levels for Azure SQL Data Warehouse
+        // These are standard DWU values, but you may want to make this configurable or fetch from capabilities in the future
+        const dwuLevels = [100, 200, 300, 400, 500, 1000, 1500, 2000, 3000, 4000, 5000, 6000, 7500, 10000, 15000, 30000];
+        const currentSku = db.sku?.name || "";
+        const options = dwuLevels.map(dwu => {
+          const skuName = `DW${dwu}`;
+          return {
+            label: skuName + (skuName === currentSku ? " (Current)" : ""),
+            value: skuName
+          };
+        });
         const picked = await vscode.window.showQuickPick(options, {
-          placeHolder: "Select a new performance level (service objective)"
+          placeHolder: "Select a new performance level (DWU)"
         });
         if (!picked) {
           return;
         }
-        // Get current db info
-        const db = await sqlClient.databases.get(item.resourceGroup, item.server, item.name);
-        // Update database with new service objective
+        // Update database with new DWU
         await sqlClient.databases.beginUpdateAndWait(item.resourceGroup, item.server, item.name, {
           sku: {
             name: picked.value,
@@ -51,7 +47,18 @@ export async function activate(context: vscode.ExtensionContext) {
         vscode.window.showInformationMessage(`Scaled ${item.name} to ${picked.label}`);
         provider.refresh();
       } catch (err: any) {
-        vscode.window.showErrorMessage(`Failed to scale ${item.name}: ${err.message}`);
+        let message = `Failed to scale ${item.name}: ${err.message}`;
+        // Add user guidance for common Dedicated SQL Pool errors
+        if (err && typeof err.message === "string" &&
+          (err.message.includes("ProvisioningDisabled") ||
+           err.message.includes("deprecated") ||
+           err.message.includes("Gen1"))) {
+          message +=
+            "\nThis may be a deprecated Gen1 Data Warehouse or a region restriction. " +
+            "If you believe scaling should be allowed, try scaling in the Azure Portal or with PowerShell (Set-AzSqlDatabase). " +
+            "If the problem persists, contact Azure support.";
+        }
+        vscode.window.showErrorMessage(message);
       }
     })
   );
