@@ -36,6 +36,18 @@ export async function activate(context: vscode.ExtensionContext) {
         return;
       }
 
+      // Confirmation prompt before scaling
+      const confirmBtn = "Scale";
+      const confirm = await vscode.window.showWarningMessage(
+        `Are you sure you want to scale ${item.name} to ${picked.value}?`,
+        { modal: true },
+        confirmBtn
+      );
+      if (confirm !== confirmBtn) {
+        vscode.window.showInformationMessage(`Scaling operation for ${item.name} was cancelled.`);
+        return;
+      }
+
       const { exec } = require("child_process");
       const cliCommand = `az sql dw update --name ${item.name} --resource-group ${item.resourceGroup} --server ${normalizedServer} --service-objective ${picked.value}`;
       const psCommand = `Set-AzSqlDatabase -ResourceGroupName '${item.resourceGroup}' -ServerName '${normalizedServer}' -DatabaseName '${item.name}' -RequestedServiceObjectiveName '${picked.value}'`;

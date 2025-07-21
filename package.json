@@ -85,7 +85,17 @@
         "command": "extension.scaleWarehouse",
         "title": "Scale Warehouse"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Azure Warehouse Manager",
+      "properties": {
+        "azureWarehouseManager.expandSubscriptionsByDefault": {
+          "type": "boolean",
+          "default": false,
+          "description": "Expand subscriptions and their warehouses by default in the tree view."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",

@@ -27,11 +27,17 @@ export class WarehouseProvider implements vscode.TreeDataProvider<WarehouseItem 
     this.refresh();
   }
 
+  private getDefaultExpandSetting(): boolean {
+    // Read from user/workspace settings
+    return vscode.workspace.getConfiguration('azureWarehouseManager').get<boolean>('expandSubscriptionsByDefault', false);
+  }
+
   async getChildren(element?: SubscriptionItem | WarehouseItem): Promise<(SubscriptionItem | WarehouseItem)[]> {
     if (!element) {
       // Top level: return subscriptions
+      const expandByDefault = this.getDefaultExpandSetting();
       return this.sqlClients.map(
-        s => new SubscriptionItem(s.displayName, s.subscriptionId)
+        s => new SubscriptionItem(s.displayName, s.subscriptionId, expandByDefault)
       );
     }
 
@@ -88,6 +94,8 @@ export class WarehouseProvider implements vscode.TreeDataProvider<WarehouseItem 
     return element;
   }
 
+  // ...removed areAllWarehousesLoaded helper...
+
   refresh(): void {
     this._onDidChangeTreeData.fire(undefined);
   }
@@ -96,9 +104,10 @@ export class WarehouseProvider implements vscode.TreeDataProvider<WarehouseItem 
 export class SubscriptionItem extends vscode.TreeItem {
   constructor(
     public readonly label: string,
-    public readonly subscriptionId: string
+    public readonly subscriptionId: string,
+    expanded: boolean = false
   ) {
-    super(label, vscode.TreeItemCollapsibleState.Collapsed);
+    super(label, expanded ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed);
     this.contextValue = "subscription";
     this.iconPath = new vscode.ThemeIcon("azure");
   }
