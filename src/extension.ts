@@ -6,134 +6,71 @@ import { SubscriptionClient } from "@azure/arm-subscriptions";
 
 export async function activate(context: vscode.ExtensionContext) {
   // Register Show Warehouse Details command
-  context.subscriptions.push(
-    vscode.commands.registerCommand("extension.showWarehouseDetails", async () => {
-      // Gather all warehouses with DWU
-      let allWarehouses: WarehouseItem[] = [];
-      let warehouseDetails: Array<{
-        name: string;
-        status: string;
-        server: string;
-        resourceGroup: string;
-        subscriptionId: string;
-        dwu: string;
-      }> = [];
-      for (const clientObj of sqlClients) {
-        const sqlClient = clientObj.sqlClient;
-        const servers = await sqlClient.servers.list();
-        for await (const server of servers) {
-          // Extract resource group from server.id
-          const resourceGroupMatch = server.id?.match(/resourceGroups\/([^/]+)/i);
-          const resourceGroup = resourceGroupMatch ? resourceGroupMatch[1] : undefined;
-          if (!resourceGroup) {
-            continue;
-          }
-          const dbs = await sqlClient.databases.listByServer(resourceGroup, server.name!);
-          for await (const db of dbs) {
-            if (db.sku?.tier === "DataWarehouse" && db.name) {
-              // Extract DWU from SKU name (e.g., DW1000)
-              let dwu = "";
-              let skuName = db.sku?.name || "";
-              if (skuName.startsWith("DW")) {
-                dwu = skuName.replace("DW", "");
-              }
-              warehouseDetails.push({
-                name: db.name,
-                status: db.status || "",
-                server: server.name!,
-                resourceGroup,
-                subscriptionId: clientObj.subscriptionId,
-                dwu
-              });
-              allWarehouses.push(new WarehouseItem(
-                db.name,
-                db.status || "",
-                server.name!,
-                resourceGroup,
-                clientObj.subscriptionId,
-                skuName
-              ));
-            }
-          }
-        }
-      }
-      if (allWarehouses.length === 0) {
-        vscode.window.showInformationMessage("No warehouses found.");
-        return;
-      }
-      // Show dropdown with DWU
-      const picked = await vscode.window.showQuickPick(
-        warehouseDetails.map(w => ({
-          label: w.name,
-          description: w.status,
-          detail: `Server: ${w.server} | Resource Group: ${w.resourceGroup} | Subscription: ${w.subscriptionId} | DWU: ${w.dwu}`,
-          warehouse: w
-        })),
-        { placeHolder: "Select a warehouse to view details" }
-      );
-      if (picked) {
-        const w = picked.warehouse;
-        vscode.window.showInformationMessage(
-          `Warehouse: ${w.name}\nStatus: ${w.status}\nServer: ${w.server}\nResource Group: ${w.resourceGroup}\nSubscription: ${w.subscriptionId}\nDWU: ${w.dwu}`
-        );
-      }
-    })
-  );
+  // Removed warehouse dropdown functionality
   // Register Scale command
   context.subscriptions.push(
     vscode.commands.registerCommand("extension.scaleWarehouse", async (item: WarehouseItem) => {
       if (!(item instanceof WarehouseItem)) {
         return;
       }
-      const sqlClientObj = sqlClients.find(s => s.subscriptionId === item.subscriptionId);
-      if (!sqlClientObj) {
-        vscode.window.showErrorMessage("Could not find SQL client for this subscription.");
+      // Only allow scaling if warehouse is online
+      if (item.status !== "Online") {
+        vscode.window.showWarningMessage(`Cannot scale ${item.name} because it is not online.`);
         return;
       }
-      const sqlClient = sqlClientObj.sqlClient;
-      try {
-        // Get current db info
-        const db = await sqlClient.databases.get(item.resourceGroup, item.server, item.name);
-        // Use a set of common DWU performance levels for Azure SQL Data Warehouse
-        // These are standard DWU values, but you may want to make this configurable or fetch from capabilities in the future
-        const dwuLevels = [100, 200, 300, 400, 500, 1000, 1500, 2000, 3000, 4000, 5000, 6000, 7500, 10000, 15000, 30000];
-        const currentSku = db.sku?.name || "";
-        const options = dwuLevels.map(dwu => {
-          const skuName = `DW${dwu}`;
-          return {
-            label: skuName + (skuName === currentSku ? " (Current)" : ""),
-            value: skuName
-          };
-        });
-        const picked = await vscode.window.showQuickPick(options, {
-          placeHolder: "Select a new performance level (DWU)"
-        });
-        if (!picked) {
-          return;
-        }
-        // Update database with new DWU
-        await sqlClient.databases.beginUpdateAndWait(item.resourceGroup, item.server, item.name, {
-          sku: {
-            name: picked.value,
-            tier: db.sku?.tier || "DataWarehouse"
-          }
-        });
-        vscode.window.showInformationMessage(`Scaled ${item.name} to ${picked.label}`);
-        provider.refresh();
-      } catch (err: any) {
-        let message = `Failed to scale ${item.name}: ${err.message}`;
-        // Add user guidance for common Dedicated SQL Pool errors
-        if (err && typeof err.message === "string" &&
-          (err.message.includes("ProvisioningDisabled") ||
-           err.message.includes("deprecated") ||
-           err.message.includes("Gen1"))) {
-          message +=
-            "\nThis may be a deprecated Gen1 Data Warehouse or a region restriction. " +
-            "If you believe scaling should be allowed, try scaling in the Azure Portal or with PowerShell (Set-AzSqlDatabase). " +
-            "If the problem persists, contact Azure support.";
-        }
-        vscode.window.showErrorMessage(message);
+      // Use Azure CLI instead of SDK for scaling
+      const normalizedServer = item.server.replace(/\.database\.windows\.net$/i, "");
+      // Common DWU levels
+      const dwuLevels = [100, 200, 300, 400, 500, 1000, 1500, 2000, 3000, 4000, 5000, 6000, 7500, 10000, 15000, 30000];
+      const options = dwuLevels.map(dwu => {
+        const skuName = `DW${dwu}c`;
+        return {
+          label: skuName,
+          value: skuName
+        };
+      });
+      const picked = await vscode.window.showQuickPick(options, {
+        placeHolder: "Select a new performance level (DWU)"
+      });
+      if (!picked) {
+        return;
       }
+
+      const { exec } = require("child_process");
+      const cliCommand = `az sql dw update --name ${item.name} --resource-group ${item.resourceGroup} --server ${normalizedServer} --service-objective ${picked.value}`;
+      const psCommand = `Set-AzSqlDatabase -ResourceGroupName '${item.resourceGroup}' -ServerName '${normalizedServer}' -DatabaseName '${item.name}' -RequestedServiceObjectiveName '${picked.value}'`;
+
+      vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: `Scaling ${item.name} to ${picked.value}...` }, async () => {
+        return new Promise<void>((resolve) => {
+          // Try Azure CLI first
+          exec(cliCommand, (cliError: any, cliStdout: string, cliStderr: string) => {
+            if (!cliError) {
+              vscode.window.showInformationMessage(`Scaled ${item.name} to ${picked.value} via Azure CLI.`);
+              provider.refresh();
+              resolve();
+              return;
+            }
+            // If CLI fails, try PowerShell
+            exec(psCommand, { shell: "powershell.exe" }, (psError: any, psStdout: string, psStderr: string) => {
+              if (!psError) {
+                vscode.window.showInformationMessage(`Scaled ${item.name} to ${picked.value} via Azure PowerShell.`);
+                provider.refresh();
+              } else {
+                let message = `Failed to scale ${item.name} with both Azure CLI and PowerShell.\nCLI error: ${cliStderr || cliError.message}\nPowerShell error: ${psStderr || psError.message}`;
+                if ((cliStderr && (cliStderr.includes("ProvisioningDisabled") || cliStderr.includes("deprecated") || cliStderr.includes("Gen1"))) ||
+                    (psStderr && (psStderr.includes("ProvisioningDisabled") || psStderr.includes("deprecated") || psStderr.includes("Gen1")))) {
+                  message +=
+                    "\nThis may be a deprecated Gen1 Data Warehouse or a region restriction. " +
+                    "If you believe scaling should be allowed, try scaling in the Azure Portal or with PowerShell (Set-AzSqlDatabase). " +
+                    "If the problem persists, contact Azure support.";
+                }
+                vscode.window.showErrorMessage(message);
+              }
+              resolve();
+            });
+          });
+        });
+      });
     })
   );
   // Load all subscriptions with error handling for missing credentials
@@ -247,15 +184,16 @@ export async function activate(context: vscode.ExtensionContext) {
         return;
       }
       const sqlClient = sqlClientObj.sqlClient;
+      const normalizedServer = item.server.replace(/\.database\.windows\.net$/i, "");
       try {
-        provider.setPendingStatus(item.server, item.resourceGroup, item.name, "Pausing");
-        await sqlClient.databases.beginPauseAndWait(item.resourceGroup, item.server, item.name);
+        provider.setPendingStatus(normalizedServer, item.resourceGroup, item.name, "Pausing");
+        await sqlClient.databases.beginPauseAndWait(item.resourceGroup, normalizedServer, item.name);
         vscode.window.showInformationMessage(`Paused ${item.name}`);
-        provider.clearPendingStatus(item.server, item.resourceGroup, item.name);
+        provider.clearPendingStatus(normalizedServer, item.resourceGroup, item.name);
         // Force refresh to update status and show correct button
         provider.refresh();
       } catch (err: any) {
-        provider.clearPendingStatus(item.server, item.resourceGroup, item.name);
+        provider.clearPendingStatus(normalizedServer, item.resourceGroup, item.name);
         // Force refresh to update status and show correct button
         provider.refresh();
         vscode.window.showErrorMessage(`Failed to pause ${item.name}: ${err.message}`);
@@ -275,13 +213,14 @@ export async function activate(context: vscode.ExtensionContext) {
         return;
       }
       const sqlClient = sqlClientObj.sqlClient;
+      const normalizedServer = item.server.replace(/\.database\.windows\.net$/i, "");
       try {
-        provider.setPendingStatus(item.server, item.resourceGroup, item.name, "Resuming");
-        await sqlClient.databases.beginResumeAndWait(item.resourceGroup, item.server, item.name);
+        provider.setPendingStatus(normalizedServer, item.resourceGroup, item.name, "Resuming");
+        await sqlClient.databases.beginResumeAndWait(item.resourceGroup, normalizedServer, item.name);
         vscode.window.showInformationMessage(`Resumed ${item.name}`);
-        provider.clearPendingStatus(item.server, item.resourceGroup, item.name);
+        provider.clearPendingStatus(normalizedServer, item.resourceGroup, item.name);
       } catch (err: any) {
-        provider.clearPendingStatus(item.server, item.resourceGroup, item.name);
+        provider.clearPendingStatus(normalizedServer, item.resourceGroup, item.name);
         vscode.window.showErrorMessage(`Failed to resume ${item.name}: ${err.message}`);
       }
     })

@@ -52,14 +52,24 @@ export class WarehouseProvider implements vscode.TreeDataProvider<WarehouseItem 
           continue;
         }
         const dbs = await sqlClient.databases.listByServer(resourceGroup, server.name!);
-        for await (const db of dbs) {
-          if (db.sku?.tier === "DataWarehouse") {
-            const key = this.makeKey(server.name!, resourceGroup, db.name!);
-            const pending = this.pendingStatus.get(key);
-            const status = pending ? pending : db.status!;
-            items.push(new WarehouseItem(db.name!, status, server.name!, resourceGroup, element.subscriptionId));
+      for await (const db of dbs) {
+        if (db.sku?.tier === "DataWarehouse") {
+          const key = this.makeKey(server.name!, resourceGroup, db.name!);
+          const pending = this.pendingStatus.get(key);
+          const status = pending ? pending : db.status!;
+          // Fetch DWU using Azure SDK (currentServiceObjectiveName)
+          let dwu = "";
+          try {
+            const dbDetails = await sqlClient.databases.get(resourceGroup, server.name!, db.name!);
+            if (dbDetails.currentServiceObjectiveName) {
+              dwu = dbDetails.currentServiceObjectiveName;
+            }
+          } catch (err) {
+            console.log("SDK DWU fetch error:", err);
           }
+          items.push(new WarehouseItem(db.name!, status, server.name!, resourceGroup, element.subscriptionId, undefined, dwu));
         }
+      }
       }
       return items;
     }
@@ -101,22 +111,18 @@ export class WarehouseItem extends vscode.TreeItem {
     public readonly server: string,
     public readonly resourceGroup: string,
     public readonly subscriptionId: string,
-    public readonly skuName?: string
+    public readonly skuName?: string,
+    public readonly dwu?: string
   ) {
     super(name, vscode.TreeItemCollapsibleState.None);
     this.description = status;
-
     // Tooltip with warehouse details and DWU
-    let dwu = "";
-    if (skuName && skuName.startsWith("DW")) {
-      dwu = skuName.replace("DW", "");
-    }
-    this.tooltip = `Warehouse: ${name}\nStatus: ${status}\nServer: ${server}\nResource Group: ${resourceGroup}\nSubscription: ${subscriptionId}${dwu ? `\nDWU: ${dwu}` : ""}`;
+    this.tooltip = `Warehouse: ${name}\nStatus: ${status}\nServer: ${server}\nResource Group: ${resourceGroup}\nSubscription: ${subscriptionId}` +
+      (dwu ? `\nDWU: ${dwu}` : "");
 
     // Set context value for context menu and button visibility
-    const resumedStates = ["Resumed", "Online", "Available"];
-    if (resumedStates.includes(status)) {
-      this.contextValue = "warehouse-resumed";
+    if (status === "Online") {
+      this.contextValue = "warehouse-online";
     } else if (status === "Paused") {
       this.contextValue = "warehouse-paused";
     } else {
