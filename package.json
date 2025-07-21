@@ -8,7 +8,7 @@
   },
   "publisher": "GooseDev",
   "description": "Easily manage Azure Data Warehouses with a simple to use interface within the VS Code Editor",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "engines": {
     "vscode": "^1.102.0"
   },
