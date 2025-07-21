@@ -100,10 +100,18 @@ export class WarehouseItem extends vscode.TreeItem {
     public readonly status: string,
     public readonly server: string,
     public readonly resourceGroup: string,
-    public readonly subscriptionId: string
+    public readonly subscriptionId: string,
+    public readonly skuName?: string
   ) {
     super(name, vscode.TreeItemCollapsibleState.None);
     this.description = status;
+
+    // Tooltip with warehouse details and DWU
+    let dwu = "";
+    if (skuName && skuName.startsWith("DW")) {
+      dwu = skuName.replace("DW", "");
+    }
+    this.tooltip = `Warehouse: ${name}\nStatus: ${status}\nServer: ${server}\nResource Group: ${resourceGroup}\nSubscription: ${subscriptionId}${dwu ? `\nDWU: ${dwu}` : ""}`;
 
     // Set context value for context menu and button visibility
     const resumedStates = ["Resumed", "Online", "Available"];

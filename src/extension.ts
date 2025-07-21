@@ -5,6 +5,80 @@ import { SqlManagementClient } from "@azure/arm-sql";
 import { SubscriptionClient } from "@azure/arm-subscriptions";
 
 export async function activate(context: vscode.ExtensionContext) {
+  // Register Show Warehouse Details command
+  context.subscriptions.push(
+    vscode.commands.registerCommand("extension.showWarehouseDetails", async () => {
+      // Gather all warehouses with DWU
+      let allWarehouses: WarehouseItem[] = [];
+      let warehouseDetails: Array<{
+        name: string;
+        status: string;
+        server: string;
+        resourceGroup: string;
+        subscriptionId: string;
+        dwu: string;
+      }> = [];
+      for (const clientObj of sqlClients) {
+        const sqlClient = clientObj.sqlClient;
+        const servers = await sqlClient.servers.list();
+        for await (const server of servers) {
+          // Extract resource group from server.id
+          const resourceGroupMatch = server.id?.match(/resourceGroups\/([^/]+)/i);
+          const resourceGroup = resourceGroupMatch ? resourceGroupMatch[1] : undefined;
+          if (!resourceGroup) {
+            continue;
+          }
+          const dbs = await sqlClient.databases.listByServer(resourceGroup, server.name!);
+          for await (const db of dbs) {
+            if (db.sku?.tier === "DataWarehouse" && db.name) {
+              // Extract DWU from SKU name (e.g., DW1000)
+              let dwu = "";
+              let skuName = db.sku?.name || "";
+              if (skuName.startsWith("DW")) {
+                dwu = skuName.replace("DW", "");
+              }
+              warehouseDetails.push({
+                name: db.name,
+                status: db.status || "",
+                server: server.name!,
+                resourceGroup,
+                subscriptionId: clientObj.subscriptionId,
+                dwu
+              });
+              allWarehouses.push(new WarehouseItem(
+                db.name,
+                db.status || "",
+                server.name!,
+                resourceGroup,
+                clientObj.subscriptionId,
+                skuName
+              ));
+            }
+          }
+        }
+      }
+      if (allWarehouses.length === 0) {
+        vscode.window.showInformationMessage("No warehouses found.");
+        return;
+      }
+      // Show dropdown with DWU
+      const picked = await vscode.window.showQuickPick(
+        warehouseDetails.map(w => ({
+          label: w.name,
+          description: w.status,
+          detail: `Server: ${w.server} | Resource Group: ${w.resourceGroup} | Subscription: ${w.subscriptionId} | DWU: ${w.dwu}`,
+          warehouse: w
+        })),
+        { placeHolder: "Select a warehouse to view details" }
+      );
+      if (picked) {
+        const w = picked.warehouse;
+        vscode.window.showInformationMessage(
+          `Warehouse: ${w.name}\nStatus: ${w.status}\nServer: ${w.server}\nResource Group: ${w.resourceGroup}\nSubscription: ${w.subscriptionId}\nDWU: ${w.dwu}`
+        );
+      }
+    })
+  );
   // Register Scale command
   context.subscriptions.push(
     vscode.commands.registerCommand("extension.scaleWarehouse", async (item: WarehouseItem) => {
