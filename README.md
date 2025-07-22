@@ -41,6 +41,7 @@ Install and log in to one of the following:
 
 ### Install in VS Code
 1. Install from the VS Code Extension Marketplace
+2. The extension will ask you to Install Azure CLI if not found, and to Login with your Azure credentials if not already authenticated.
 
 ### Install from Source
 1. Clone or download this repository.
@@ -49,9 +50,17 @@ Install and log in to one of the following:
 4. Press `F5` to launch the extension in a new Extension Development Host window.
 
 ## Usage
-1. Open the command palette (`Ctrl+Shift+P` or `Cmd+Shift+P`).
-2. Search for and run commands like `Azure Warehouse: Authenticate`, `Azure Warehouse: List Warehouses`, or `Azure Warehouse: Pause/Resume Warehouse`.
-3. Follow prompts to authenticate and manage your Azure resources.
+You can access Azure Warehouse Manager from the VS Code activity bar:
+
+![Azure Warehouse Manager Activity Bar](media/DataWarehouseUIExample.png)
+
+Click the Azure Warehouse Manager icon to open the extension UI. From there, you can:
+- List and manage your data warehouses
+- Pause, resume, and monitor warehouse status
+- Scale online warehouses
+- View subscription details and warehouse properties
+
+All extension features are available through this dedicated UI—no need to use the command palette.
 
 ## Authentication
 This extension uses Azure's `DefaultAzureCredential`, supporting multiple authentication methods (Visual Studio, Azure CLI, Managed Identity, etc.).
